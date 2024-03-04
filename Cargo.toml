@@ -1,6 +1,6 @@
 [package]
 name = "rust-vhost"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "a simple tool for extract SNI from tls handshake where you transfer traffic to any destination you want"
 license = "MIT"
