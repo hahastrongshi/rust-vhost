@@ -2,3 +2,5 @@
 name = "rust-govhost"
 version = "0.1.0"
 edition = "2021"
+description = "a simple tool for extract SNI from tls handshake where you transfer traffic to any destination you want"
+license = "MIT"

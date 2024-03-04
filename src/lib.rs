@@ -2,6 +2,15 @@ use std::io::{self, Cursor, Read, Write};
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 
+
+/// shared conn to fetch sni info and return value is still available
+///
+/// # Example
+/// ```
+/// let tls_conn = ShareConn::new(conn);
+/// let sni = tls_conn.get_sni();
+/// assert!("google.com", sni);
+/// ```
 pub(crate) struct SharedConn {
     pub stream: TcpStream,
     buffer: Arc<Mutex<Cursor<Vec<u8>>>>,
