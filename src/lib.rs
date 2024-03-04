@@ -17,7 +17,7 @@ pub mod vhost {
     use std::net::TcpStream;
     use std::sync::{Arc, Mutex};
 
-    pub(crate) struct SharedConn {
+    pub struct SharedConn {
         pub stream: TcpStream,
         buffer: Arc<Mutex<Cursor<Vec<u8>>>>,
 
