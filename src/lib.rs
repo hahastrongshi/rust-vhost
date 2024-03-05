@@ -2,12 +2,11 @@
 
 
 ///! vhost
-///
 ///!  vhost is to fetch sni info and return value is still available
 ///
 ///! # Example
 /// ```
-/// let tls_conn = ShareConn::new(conn);
+/// let tls_conn = new(conn);
 /// let sni = tls_conn.get_sni();
 /// assert!("google.com", sni);
 /// ```
@@ -17,6 +16,26 @@ pub mod vhost {
     use std::net::TcpStream;
     use std::sync::{Arc, Mutex};
 
+    pub fn new(mut stream: TcpStream) -> Result<SharedConn, io::Error> {
+        let buffer = Arc::new(Mutex::new(Cursor::new(Vec::new())));
+
+        // read tls handshake from stream, and then put data into buffer
+        let mut buf: [u8; 1024] = [0_u8; 1024];
+        let n = stream.read(&mut buf)?;
+        if n > 0 {
+            let mut buffer = buffer.lock().unwrap();
+            buffer.get_mut().extend_from_slice(&buf[..n]);
+        }
+
+        let sni = parse_sni(&buf, n)?;
+
+        Ok(SharedConn {
+            stream,
+            buffer,
+            sni,
+        })
+    }
+
     pub struct SharedConn {
         pub stream: TcpStream,
         buffer: Arc<Mutex<Cursor<Vec<u8>>>>,
@@ -25,26 +44,6 @@ pub mod vhost {
     }
 
     impl SharedConn {
-        pub fn new(mut stream: TcpStream) -> Result<SharedConn, std::io::Error> {
-            let buffer = Arc::new(Mutex::new(Cursor::new(Vec::new())));
-
-            // read tls handshake from stream, and then put data into buffer
-            let mut buf: [u8; 1024] = [0_u8; 1024];
-            let n = stream.read(&mut buf)?;
-            if n > 0 {
-                let mut buffer = buffer.lock().unwrap();
-                buffer.get_mut().extend_from_slice(&buf[..n]);
-            }
-
-            let sni = parse_sni(&buf, n)?;
-
-            Ok(SharedConn {
-                stream,
-                buffer,
-                sni,
-            })
-        }
-
         pub fn get_sni(&self) -> String {
             self.sni.clone()
         }
@@ -158,7 +157,7 @@ mod tests {
         use std::net::TcpListener;
         let listener = TcpListener::bind("0.0.0.0:443").unwrap();
         let (stream, _) = listener.accept().unwrap();
-        let tls_conn = vhost::SharedConn::new(stream).unwrap();
+        let tls_conn = vhost::new(stream).unwrap();
         let sni = tls_conn.get_sni();
         // 添加  assert 确保 sni 为 www.baidu.com
         assert_eq!(sni, "www.baidu.com");
